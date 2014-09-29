@@ -23,7 +23,12 @@ function logpython(){
 	# disown the actual script and output the results to a log file
 	# ie the current shell is released and another process is forked to execute beetusbot
 	python $1 >> $LOG_FILE 2>&1
-	echo "--------------" >> $LOG_FILE
+	echo "--------------
+
+
+
+
+							">> $LOG_FILE
 }
 
 function runBot(){
