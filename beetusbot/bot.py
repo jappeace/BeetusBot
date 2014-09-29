@@ -4,6 +4,8 @@ Created on Oct 5, 2013
 @author: Chris
 '''
 import praw
+import lastacces
+import dbacces
 import config
 import time
 import requests.exceptions
@@ -13,27 +15,27 @@ subreddit = reddit.get_subreddit(config.SUBREDDIT)
 reddit.login(config.USERNAME, config.PASSWORD)
 def main():
     subscriberservice.run(reddit)
-    
-    latest = config.get_latest()
+
+    latest = lastacces.get_latest()
     submissions = list(subreddit.get_new(limit=8, place_holder=latest))
     print "Got %d new submissions after %s" % (len(submissions) - 1, latest)
     if len(submissions) > 1:
         print "Saving latest"
-        config.set_latest(submissions[0].id)
+        lastacces.set_latest(submissions[0].id)
     else:
         print "No new submissions."
-        
+
     for submission in submissions:
         if submission.id != latest and filter_post(submission):
-            print "Handling %s" % submission.id 
+            print "Handling %s" % submission.id
             handle(submission)
         else:
             print "Submission is filtered out"
-            
-    print "Done, checking again in 5 minutes."
-    
 
-def handle(submission):  
+    print "Done, checking again in 5 minutes."
+
+
+def handle(submission):
     if submission.author is None: #wat? oh when a user deletes itself as author right away
         return
     all_stories = get_stories_from(submission.author.name)
@@ -43,7 +45,7 @@ def handle(submission):
         print "User only has one story, not posting!"
         return
     for story in all_stories:
-        previous_id = config.get_post_in_thread(story.id)
+        previous_id = dbacces.get_post_in_thread(story.id)
         post = construct_post(all_stories, story.id)
         posted = False
         while not posted:
@@ -57,7 +59,7 @@ def handle(submission):
                         subscriberservice.notify(submission, reddit)
                     subm = reddit.get_submission(submission_id=story.id)
                     added = subm.add_comment(post)
-                    config.add_post(story.id, story.author.name, added.id)
+                    dbacces.add_post(story.id, story.author.name, added.id)
                     print "Added new comment: %s" % added.id
                 posted = True
             except praw.errors.RateLimitExceeded, requests.exceptions.HTTPError:
@@ -76,7 +78,6 @@ def construct_post(submissions, current_id):
     posts[0] = "* " + posts[0] #also add formatting to first item
     return config.POST_CONTENT.format(username = submissions[0].author.name, 
                                       text     = "\n\n* ".join(posts).encode('utf-8'))
-    
 def get_stories_from(user):
     redditor = reddit.get_redditor(user)
     submitted = redditor.get_submitted(limit=5000)

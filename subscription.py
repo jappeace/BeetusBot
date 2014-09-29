@@ -1,17 +1,18 @@
 from beetusbot import config
+from beetusbot import dbacces
 from beetusbot import bot
 from beetusbot import subscriberservice
 import sys
 
 if __name__ == "__main__":
-    stories = config.get_new_stories()
+    stories = dbacces.get_new_stories()
     
     if len(stories) == 0:
         print "No notifications to send"
         sys.exit()
     
     for id in stories:
-        config.mark_checked(id)
+        dbacces.mark_checked(id)
 
     for id in stories:
         print "Notifying about %s" % id

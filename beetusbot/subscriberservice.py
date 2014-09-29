@@ -4,7 +4,8 @@ Created on 21 okt. 2013
 @author: Chris
 '''
 import sys
-import config
+import strings
+import dbacces
 import re
 import praw
 import time
@@ -28,15 +29,15 @@ def construct_pm(author, subscriptions):
     if len(subscriptions) >= 1:
         subscriptions[0] = "* " + subscriptions[0]
         userlist = "\n\n* ".join(subscriptions)
-        return config.SUBSCRIPTION_CONTENT.format(username=author,
+        return strings.SUBSCRIPTION_CONTENT.format(username=author,
                                                   text=userlist)
     else:
-        return config.SUBSCRIPTION_CONTENT.format(username=author,
+        return strings.SUBSCRIPTION_CONTENT.format(username=author,
                                                   text="You don't have any subscriptions")
 
 def do_reply(message):
     print "Sending pm to %s about their subscriptions" % message.author
-    message.reply(construct_pm(message.author, config.get_subscriptions(message.author)))
+    message.reply(construct_pm(message.author, dbacces.get_subscriptions(message.author)))
     message.mark_as_read()
 
 def reply_list(message, users):
@@ -46,18 +47,18 @@ def send_message(sub, title, body):
     print "Send message %s to %s, content: \r\n%s" % (title, sub, body)
 
 def notify(story, reddit):
-    config.add_notification_request(story.id)
+    dbacces.add_notification_request(story.id)
     print "Added req id %s to DB" % story.id
 
 def send_notifications(story, reddit):
-    subs = config.get_subscribers(story.author)
+    subs = dbacces.get_subscribers(story.author)
     for sub in subs:
         subscriber = sub[0]
         pmed = False
         print "Sending message to %s about a new story from %s" % (subscriber, story.author)
         while not pmed:
             try:
-                message = config.NEW_STORY_CONTENT.format(username=subscriber,
+                message = strings.NEW_STORY_CONTENT.format(username=subscriber,
                                                             writer=story.author,
                                                             title=story.title,
                                                             url=story.url.encode('utf8')
@@ -66,7 +67,7 @@ def send_notifications(story, reddit):
                 pmed = True
             except praw.errors.InvalidUser: #catch incase user subscribes and then deletes the account.
                 print "User %s doesn't exist anymore, removing from list!" % subscriber
-                config.remove_subscription(story.author, subscriber)
+                dbacces.remove_subscription(story.author, subscriber)
                 pmed = True
             except praw.errors.RateLimitExceeded, requests.exceptions.HTTPError:
                 print "503 error or something, sleeping for 60 seconds"
@@ -74,7 +75,6 @@ def send_notifications(story, reddit):
             except:
                 print "Unknown error: ", sys.exc_info()[0]
                 time.sleep(60)
-            
 
 def run(redd):
     new_messages = get_new_messages(redd)
@@ -84,11 +84,11 @@ def run(redd):
         if "unsubscribe" in message.body.lower() or "unsubscribe" in message.subject.lower():
             for user in extract_users(message.body):
                 print "Removing subscription from %s to %s" % (user, message.author)
-                config.remove_subscription(user, message.author)
-                
+                dbacces.remove_subscription(user, message.author)
+
             do_reply(message)
         elif "subscribe" in message.body.lower() or "subscribe" in message.subject.lower():
             for user in extract_users(message.body):
                 print "Added subscription from %s to %s" % (user, message.author)
-                config.add_subscription(user, message.author)
+                dbacces.add_subscription(user, message.author)
             do_reply(message)
