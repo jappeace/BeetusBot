@@ -4,6 +4,7 @@ Source code for BeetusBot
 
 ## Installation
 Note: $ means you can execute as a user, # means you need to execute as root (sudo)
+
 clone the repository:
 
 	$ git clone https://github.com/Bakkes/BeetusBot.git
