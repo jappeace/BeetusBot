@@ -14,7 +14,12 @@ make sure you have the required python dependecies with pip
 	# pip install praw
 	# pip install mysql-python
 
-Now go to "start the bot" to learn how to start it
+### Config file
+rename `beetusbot/config.example.py` to `beetusbot/config.py`
+
+	$ mv beetusbot/config.example.py beetusbot/config.py
+
+the config file is ignored by default to allow your passwords to be kept private
 
 ### Compatibility
 The bot was written in Python 2.7. Make sure you have this installed and set as the system default.
