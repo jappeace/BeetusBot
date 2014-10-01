@@ -7,6 +7,7 @@ import praw
 import lastacces
 import dbacces
 import config
+import strings
 import time
 import requests.exceptions
 import subscriberservice
@@ -76,7 +77,7 @@ def construct_url(reddit_id, reply_id):
 def construct_post(submissions, current_id):
     posts = [("[%s%s](%s)" % (submission.title, " (this)" if submission.id == current_id else "", submission.url)) for submission in submissions]
     posts[0] = "* " + posts[0] #also add formatting to first item
-    return config.POST_CONTENT.format(username = submissions[0].author.name, 
+    return strings.POST_CONTENT.format(username = submissions[0].author.name, 
                                       text     = "\n\n* ".join(posts).encode('utf-8'))
 def get_stories_from(user):
     redditor = reddit.get_redditor(user)
